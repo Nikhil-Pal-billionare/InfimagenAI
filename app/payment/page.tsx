@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense } from "react"; // ✅ Added Suspense
 import { useRouter, useSearchParams } from "next/navigation";
-import FoxgenLogo from "@/components/branding/FoxgenLogo";
 
 type Pricing = {
   currency: string;
