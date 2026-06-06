@@ -29,7 +29,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ imageBase64, mimeType: "image/png" });
   } catch (err: any) {
     if (userId && deducted) {
-      await supabaseAdmin.rpc("deduct_credits", { p_user_id: userId, p_amount: -CREDIT_COSTS.THUMBNAIL_GENERATION, p_reason: "refund_thumbnail_failed", p_meta: {} }).catch(() => {});
+      try {
+  await supabaseAdmin.rpc("deduct_credits", {
+    p_user_id: userId,
+    p_amount: -CREDIT_COSTS.THUMBNAIL_GENERATION,
+    p_reason: "refund_thumbnail_failed",
+    p_meta: {}
+  });
+} catch (refundError) {
+  console.error("Thumbnail refund failed:", refundError);
+      }
     }
     return NextResponse.json({ error: err.message || "Thumbnail failed" }, { status: 500 });
   }
