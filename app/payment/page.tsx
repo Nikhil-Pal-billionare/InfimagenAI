@@ -125,8 +125,7 @@ function PaymentContent() {
   return (
     <main className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
       <div className="w-full max-w-md bg-[#121212] border border-gray-800 rounded-xl p-8 space-y-6 text-white">
-        <div className="text-center">
-          <FoxgenLogo size={80} />
+        <div className="text-center">infimagen</div> 
           <h1 className="text-2xl font-bold mt-4">Complete Payment</h1>
         </div>
 
