@@ -4,189 +4,253 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabaseClient";
 
-const TOOL_CARDS = [
-  { href: "/dashboard/image",     icon: "🖼️", label: "Image",       desc: "Generate stunning images from text",     color: "from-violet-500/10 border-violet-500/15" },
-  { href: "/dashboard/video",     icon: "🎬", label: "B-Roll",      desc: "AI-matched video footage for content",   color: "from-blue-500/10 border-blue-500/15" },
-  { href: "/dashboard/thumbnail", icon: "🎨", label: "Thumbnail",   desc: "YouTube-ready 16:9 thumbnails",          color: "from-pink-500/10 border-pink-500/15" },
-  { href: "/dashboard/script",    icon: "📝", label: "Script",      desc: "Scripts for YouTube, Reels & Podcasts",  color: "from-emerald-500/10 border-emerald-500/15" },
-  { href: "/dashboard/tts",       icon: "🔊", label: "Text to Speech", desc: "Natural voiceovers from your scripts", color: "from-amber-500/10 border-amber-500/15" },
+const TOOLS = [
+  { href: "/dashboard/Image",     icon: "🖼️",  label: "Image" },
+  { href: "/dashboard/video",     icon: "🎬",  label: "Video" },
+  { href: "/dashboard/thumbnail", icon: "🎨",  label: "Thumbnail" },
+  { href: "/dashboard/Script",    icon: "📝",  label: "Script" },
+  { href: "/dashboard/tts",       icon: "🔊",  label: "Speech" },
+  { href: "/dashboard/Image",     icon: "⬆️",  label: "Upscale",  badge: "Soon" },
+  { href: "/dashboard/Image",     icon: "✏️",  label: "Draw",     badge: "Soon" },
 ];
 
-type RecentGen = {
-  id: string;
-  reason: string;
-  created_at: string;
-};
+// Fake community images — gradient placeholders with different colors
+const COMMUNITY = [
+  { gradient: "from-orange-900 via-red-800 to-orange-600",   label: "Fantasy Portrait",   likes: 234 },
+  { gradient: "from-violet-900 via-purple-800 to-pink-700",  label: "Cosmic Nebula",      likes: 189 },
+  { gradient: "from-blue-900 via-cyan-800 to-teal-600",      label: "Ocean Depths",       likes: 312 },
+  { gradient: "from-green-900 via-emerald-800 to-lime-700",  label: "Enchanted Forest",   likes: 156 },
+  { gradient: "from-yellow-900 via-amber-800 to-orange-700", label: "Golden Temple",      likes: 278 },
+  { gradient: "from-rose-900 via-pink-800 to-fuchsia-700",   label: "Neon City",          likes: 421 },
+  { gradient: "from-slate-900 via-gray-800 to-zinc-700",     label: "Dark Matter",        likes: 198 },
+  { gradient: "from-indigo-900 via-blue-800 to-sky-700",     label: "Digital Dreams",     likes: 345 },
+  { gradient: "from-red-900 via-rose-800 to-pink-700",       label: "Fire Spirit",        likes: 267 },
+];
+
+const CATEGORIES = ["All", "Photography", "Animals", "Anime", "Architecture", "Character", "Food", "Sci-Fi"];
 
 export default function DashboardHome() {
   const router   = useRouter();
   const supabase = createClient();
 
-  const [prompt, setPrompt]         = useState("");
-  const [activeTab, setActiveTab]   = useState<"image" | "video">("image");
-  const [recent, setRecent]         = useState<RecentGen[]>([]);
-  const [bannerBg, setBannerBg]     = useState<string | null>(null);
-  const [greeting, setGreeting]     = useState("Good morning");
-  const [userName, setUserName]     = useState("");
+  const [prompt, setPrompt]       = useState("");
+  const [activeTab, setActiveTab] = useState<"image" | "video">("image");
+  const [bannerBg, setBannerBg]   = useState<string | null>(null);
+  const [category, setCategory]   = useState("All");
+  const [userName, setUserName]   = useState("");
 
   useEffect(() => {
-    const h = new Date().getHours();
-    if (h < 12) setGreeting("Good morning");
-    else if (h < 17) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
-
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/sign-in"); return; }
       setUserName(user.email?.split("@")[0] ?? "Creator");
-
-      const [recentRes, bannerRes] = await Promise.all([
-        supabase.from("credit_logs").select("id, reason, created_at")
-          .eq("user_id", user.id)
-          .lt("amount", 0)
-          .order("created_at", { ascending: false })
-          .limit(6),
-        supabase.from("app_settings").select("value").eq("key", "dashboard_banner").single(),
-      ]);
-
-      setRecent(recentRes.data ?? []);
-      if (bannerRes.data?.value) setBannerBg(bannerRes.data.value);
+      const { data: banner } = await supabase
+        .from("app_settings").select("value").eq("key", "dashboard_banner").single();
+      if (banner?.value) setBannerBg(banner.value);
     }
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleGenerate() {
     if (!prompt.trim()) return;
-    const route = activeTab === "image" ? "/dashboard/image" : "/dashboard/video";
+    const route = activeTab === "image" ? "/dashboard/Image" : "/dashboard/video";
     router.push(`${route}?prompt=${encodeURIComponent(prompt)}`);
   }
 
-  const TOOL_LABELS: Record<string, string> = {
-    image_generation:     "🖼️ Image",
-    thumbnail_generation: "🎨 Thumbnail",
-    broll_generation:     "🎬 B-Roll",
-    text_to_speech:       "🔊 TTS",
-    script_generation:    "📝 Script",
-    ai_cut_editor:        "✂️ AI Cut",
-  };
-
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* ── Hero Banner ── */}
-      <div className="relative h-52 md:h-64 overflow-hidden flex-shrink-0">
+    <div className="flex flex-col min-h-screen bg-[#080808] text-white">
+
+      {/* ── HERO BANNER ── */}
+      <div className="relative w-full" style={{ height: "56vw", maxHeight: 420, minHeight: 220 }}>
+        {/* Background */}
         {bannerBg ? (
-          <>
-            <img src={bannerBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#080808]" />
-          </>
+          <img src={bannerBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-indigo-900/20 to-[#080808]">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[200px] rounded-full bg-violet-600/10 blur-[80px]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a00] via-[#2a1000] to-[#0d0d0d]">
+            {/* Fake cinematic overlay like Leonardo's face image */}
+            <div className="absolute inset-0 opacity-60"
+              style={{
+                background: "radial-gradient(ellipse at 60% 40%, rgba(180,80,20,0.5) 0%, transparent 60%), radial-gradient(ellipse at 30% 70%, rgba(100,40,10,0.4) 0%, transparent 50%)"
+              }}
+            />
           </div>
         )}
-        <div className="relative z-10 h-full flex flex-col justify-end px-6 pb-6">
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-1">{greeting}</p>
-          <h1 className="text-3xl md:text-4xl font-black text-white">
+
+        {/* Dark gradient overlay — bottom fade */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#080808]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#080808]/60 via-transparent to-transparent" />
+
+        {/* YOURS TO CREATE text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h1
+            className="text-white font-black text-center select-none"
+            style={{
+              fontSize: "clamp(2.2rem, 8vw, 6rem)",
+              letterSpacing: "-0.02em",
+              textShadow: "0 2px 40px rgba(0,0,0,0.8)",
+              fontFamily: "'Arial Black', 'Impact', sans-serif",
+            }}
+          >
             YOURS TO CREATE
           </h1>
         </div>
-      </div>
 
-      {/* ── Prompt Box ── */}
-      <div className="px-4 md:px-6 -mt-6 relative z-10">
-        <div className="bg-[#141414] border border-white/8 rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
-          {/* Input row */}
-          <div className="flex items-center gap-3 p-3 md:p-4">
-            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0 text-white/30 text-sm">
-              +
-            </div>
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              placeholder="Type a prompt..."
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/20 outline-none"
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              className="hidden sm:block bg-white/8 hover:bg-white/15 disabled:opacity-30 text-white/60 hover:text-white text-sm font-medium px-4 py-2 rounded-xl transition-all border border-white/8"
-            >
-              Generate
-            </button>
-          </div>
-
-          {/* Tab row */}
-          <div className="flex items-center gap-2 px-3 md:px-4 pb-3 border-t border-white/5 pt-3">
-            {(["image", "video"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
-                  activeTab === tab
-                    ? "bg-violet-600/80 text-white border border-violet-500/50"
-                    : "bg-white/5 text-white/40 hover:text-white/70 border border-transparent"
-                }`}
-              >
-                {tab === "image" ? "🖼️" : "🎬"} {tab}
+        {/* Prompt Bar — bottom of hero */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 md:px-8 md:pb-6">
+          <div className="max-w-3xl mx-auto bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              {/* Add image icon */}
+              <button className="w-9 h-9 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 hover:bg-white/15 transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
               </button>
-            ))}
-            <button
-              onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              className="sm:hidden ml-auto bg-violet-600 disabled:opacity-30 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all"
-            >
-              Go →
-            </button>
+
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                placeholder="Type a prompt..."
+                className="flex-1 bg-transparent text-sm text-white placeholder-white/25 outline-none"
+              />
+
+              {/* Sparkle button */}
+              <button className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-all">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.35)" stroke="none">
+                  <path d="M12 2l2.4 7.6H22l-6.4 4.6 2.4 7.6L12 17.2l-6 4.6 2.4-7.6L2 9.6h7.6z"/>
+                </svg>
+              </button>
+
+              <button
+                onClick={handleGenerate}
+                disabled={!prompt.trim()}
+                className="text-white/40 disabled:opacity-30 text-sm font-medium px-3 py-1.5 rounded-xl hover:text-white transition-all"
+              >
+                Generate
+              </button>
+            </div>
+
+            {/* Tool icons row — like Leonardo */}
+            <div className="flex items-center gap-5 px-4 pb-3.5 pt-0.5 border-t border-white/5 overflow-x-auto">
+              {[
+                { icon: "🖼️", label: "Image", tab: "image" as const },
+                { icon: "🎬", label: "Video", tab: "video" as const },
+              ].map((t) => (
+                <button
+                  key={t.tab}
+                  onClick={() => setActiveTab(t.tab)}
+                  className={`flex items-center gap-1.5 text-xs font-medium py-1 border-b-2 transition-all whitespace-nowrap ${
+                    activeTab === t.tab
+                      ? "border-violet-500 text-white"
+                      : "border-transparent text-white/35 hover:text-white/60"
+                  }`}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── Tool Cards ── */}
-      <div className="px-4 md:px-6 mt-8">
-        <p className="text-xs font-semibold text-white/25 uppercase tracking-widest mb-4">AI Tools</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {TOOL_CARDS.map((tool) => (
+      {/* ── TOOL ICONS ROW — Leonardo style ── */}
+      <div className="px-4 md:px-8 pt-6 pb-4">
+        <div className="max-w-3xl mx-auto flex items-center justify-center gap-4 md:gap-8 flex-wrap">
+          {TOOLS.map((tool) => (
             <a
-              key={tool.href}
-              href={tool.href}
-              className={`group bg-gradient-to-br ${tool.color} to-transparent border rounded-2xl p-4 hover:border-white/20 transition-all duration-200`}
+              key={tool.label}
+              href={tool.badge ? "#" : tool.href}
+              className="flex flex-col items-center gap-2 group relative"
             >
-              <div className="text-2xl mb-3">{tool.icon}</div>
-              <p className="text-sm font-bold text-white mb-1">{tool.label}</p>
-              <p className="text-xs text-white/30 leading-tight group-hover:text-white/50 transition-colors">
-                {tool.desc}
-              </p>
+              {tool.badge && (
+                <span className="absolute -top-1.5 -right-3 bg-violet-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none z-10">
+                  {tool.badge}
+                </span>
+              )}
+              {/* Circle icon */}
+              <div className={`w-14 h-14 rounded-full border flex items-center justify-center text-2xl transition-all ${
+                tool.badge
+                  ? "bg-white/3 border-white/8 opacity-40"
+                  : "bg-[#1a1a1a] border-white/12 hover:border-violet-500/50 hover:bg-violet-500/10 group-hover:scale-105"
+              }`}>
+                {tool.icon}
+              </div>
+              <span className={`text-xs font-medium transition-colors ${
+                tool.badge ? "text-white/25" : "text-white/45 group-hover:text-white/80"
+              }`}>
+                {tool.label}
+              </span>
             </a>
           ))}
         </div>
       </div>
 
-      {/* ── Recent Activity ── */}
-      {recent.length > 0 && (
-        <div className="px-4 md:px-6 mt-8 pb-10">
-          <p className="text-xs font-semibold text-white/25 uppercase tracking-widest mb-4">Recent Activity</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {recent.map((r) => (
-              <div
-                key={r.id}
-                className="bg-[#111] border border-white/5 rounded-xl p-3 flex items-center gap-3 hover:bg-white/3 transition-colors"
-              >
-                <span className="text-lg">{(TOOL_LABELS[r.reason] ?? "⚡").slice(0, 2)}</span>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-white/60 truncate">
-                    {TOOL_LABELS[r.reason] ?? r.reason.replace(/_/g, " ")}
-                  </p>
-                  <p className="text-xs text-white/20">
-                    {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </p>
-                </div>
-              </div>
-            ))}
+      {/* Divider */}
+      <div className="border-t border-white/5 mx-4 md:mx-8 my-2" />
+
+      {/* ── COMMUNITY CREATIONS ── */}
+      <div className="px-4 md:px-8 pt-4 pb-10">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-4 flex-wrap">
+          <h2 className="text-lg font-bold text-white">Community Creations</h2>
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-1.5 bg-violet-600/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
+              🔥 Trending ▾
+            </button>
+            <button className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/10 text-white/60 text-xs font-semibold px-3 py-1.5 rounded-lg">
+              ⊞ All
+            </button>
+            <button className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/10 text-white/60 text-xs font-semibold px-3 py-1.5 rounded-lg">
+              ▶ Video
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Category pills */}
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`whitespace-nowrap text-xs font-medium px-3.5 py-2 rounded-full border transition-all flex-shrink-0 ${
+                category === cat
+                  ? "bg-violet-600/80 border-violet-500/50 text-white"
+                  : "bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/8"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Masonry-style grid — like Leonardo */}
+        <div className="columns-2 md:columns-3 gap-2 space-y-2">
+          {COMMUNITY.map((item, i) => (
+            <div
+              key={i}
+              className="break-inside-avoid rounded-xl overflow-hidden relative group cursor-pointer"
+              style={{ aspectRatio: i % 3 === 0 ? "3/4" : i % 3 === 1 ? "1/1" : "4/3" }}
+            >
+              {/* Gradient placeholder — in real app this would be generated images */}
+              <div className={`w-full h-full bg-gradient-to-br ${item.gradient} min-h-[140px]`} />
+
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-end">
+                <div className="p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-200 w-full">
+                  <p className="text-white text-xs font-medium truncate">{item.label}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-white/60 text-xs">♥ {item.likes}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
