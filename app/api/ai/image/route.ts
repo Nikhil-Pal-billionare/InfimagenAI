@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     // Generate image
     const response = await genAI.models.generateImages({
-      model: "gemini-2.0-flash-exp", prompt,
+      model: "imagen-4.0-generate-001", prompt,
       config: { numberOfImages: 1, aspectRatio },
     });
     const imageBase64 = response.generatedImages?.[0]?.image?.imageBytes;
