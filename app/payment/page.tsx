@@ -67,7 +67,7 @@ function PaymentContent() {
     setLoading(true);
 
     try {
-      const res  = await fetch("/api/payments/create-order", {
+      const res  = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, planId, discountCode: promoApplied ? promoCode.toUpperCase() : null }),
