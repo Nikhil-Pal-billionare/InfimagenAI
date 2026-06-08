@@ -131,8 +131,7 @@ function PaymentContent() {
 
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-          <span className="text-white font-black text-base">I</span>
+        <img src="https://lrdwqsllipznxajlyyea.supabase.co/storage/v1/object/public/media-uploads/1000055271-removebg-preview.png" alt="logo" className="w-9 h-9 rounded-full object-cover" />
         </div>
         <span className="text-white font-bold text-lg">InfiMagen</span>
       </div>
