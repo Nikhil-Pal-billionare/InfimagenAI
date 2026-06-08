@@ -92,7 +92,7 @@ function PaymentContent() {
         theme: { color: "#7c3aed" },
         modal: { ondismiss: () => setLoading(false) },
         handler: async (response: any) => {
-          const vRes = await fetch("/api/payments/success", {
+          const vRes = await fetch("/api/payment/success", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
