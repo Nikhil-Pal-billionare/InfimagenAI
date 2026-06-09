@@ -220,11 +220,9 @@ function ImageTool() {
           </div>
           <div className="flex flex-col gap-3">
             {images.map((img, i) => (
-              <div className="flex flex-col gap-3">
-          {images.map((img, i) => (
-            <div key={img.id} onClick={() => handleImageClick(img)}
-              className="rounded-xl overflow-hidden relative group cursor-pointer w-full">>
-                <img src={img.image_url} alt={img.prompt} className=className="w-full h-auto" loading="lazy" />
+              <div key={img.id} onClick={() => handleImageClick(img)}
+                className="rounded-xl overflow-hidden relative group cursor-pointer w-full">
+                <img src={img.image_url} alt={img.prompt} className="w-full h-auto" loading="lazy" />
 
                 {/* Pro lock */}
                 {!img.is_free && !isPaid && (
