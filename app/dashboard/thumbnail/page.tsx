@@ -192,9 +192,8 @@ export default function ThumbnailPage() {
           <div className="flex flex-col gap-4">
             {templates.map((template) => (
               <div key={template.id} onClick={() => handleTemplateClick(template)}
-                className="relative rounded-xl overflow-hidden cursor-pointer group border border-white/8 hover:border-violet-500/40 transition-all"
-                style={{ aspectRatio: "16/9", width: "100%" }}
-className="relative rounded-xl overflow-hidden cursor-pointer group border border-white/8 hover:border-violet-500/40 transition-all w-full">
+                className="relative rounded-xl overflow-hidden cursor-pointer group border border-white/8 hover:border-violet-500/40 transition-all w-full"
+style={{ aspectRatio: "16/9" }}>
                 <img src={template.image_url} alt={template.title} className="w-full h-full object-cover" />
                 <div className="absolute top-2 right-2">
                   {template.is_free
