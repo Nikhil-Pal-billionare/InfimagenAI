@@ -222,8 +222,9 @@ function ImageTool() {
             {images.map((img, i) => (
               <div key={img.id} onClick={() => handleImageClick(img)}
                 className="break-inside-avoid rounded-xl overflow-hidden relative group cursor-pointer"
-                style={{ aspectRatio: "4/3" }}>
-                <img src={img.image_url} alt={img.prompt} className="w-full h-full object-cover min-h-[140px]" loading="lazy" />
+                <div key={img.id} onClick={() => handleImageClick(img)}
+  className="break-inside-avoid rounded-xl overflow-hidden relative group cursor-pointer w-full">>
+                <img src={img.image_url} alt={img.prompt} className=className="w-full h-auto" loading="lazy" />
 
                 {/* Pro lock */}
                 {!img.is_free && !isPaid && (
