@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       audioBuffer = Buffer.from(data.audioContent, "base64");
     }
 
-    return new Response(audioBuffer, {
+    return new Response(audioBuffer.buffer, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Content-Length": String(audioBuffer.length),
