@@ -42,6 +42,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
       </svg>
     )},
+    { href: "/dashboard/remove-bg", label: "BG Remove", icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    )},
   ];
 
   return (
@@ -125,6 +130,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { href: "/dashboard/thumbnail", label: "Thumbnail" },
             { href: "/dashboard/Script", label: "Script" },
             { href: "/dashboard/tts", label: "TTS" },
+            { href: "/dashboard/remove-bg", label: "BG Remover" },
           ].map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
               className="flex items-center px-3 py-2.5 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all">
